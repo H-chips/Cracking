@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>经典消方块</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="scoreboard">
+      <section><span>我的最高分</span><strong id="best">0</strong></section>
+      <section class="current"><span>本局分数</span><strong id="score">0</strong></section>
+      <section class="target"><span>今日挑战</span><strong>1000分</strong></section>
+    </header>
+
+    <div class="progress"><i id="progressFill"></i><b>✓</b><span>250</span><span>500</span><span>750</span><span>1K</span></div>
+
+    <section class="board-frame" aria-label="8乘8消除棋盘">
+      <div id="board" class="board"></div>
+    </section>
+
+    <section id="tray" class="tray" aria-label="待放置方块"></section>
+    <p class="hint">拖动下方方块到棋盘；填满整行或整列即可消除</p>
+    <button id="restart" class="restart" type="button">重新开始</button>
+    <nav class="rescue-dock" aria-label="常驻救援伙伴">
+      <button data-rescue="hammer" type="button" aria-label="召唤巨型锤子"><span class="hammer-icon" aria-hidden="true">🔨</span></button>
+      <button data-rescue="bird" type="button" aria-label="召唤无辜小鸟"><span class="bird-sprite bird-innocent" aria-hidden="true"></span></button>
+    </nav>
+
+    <dialog id="gameOver">
+      <div class="dialog-card">
+        <h2>需要救援！</h2>
+        <p>当前积分 <strong id="finalScore">0</strong>，选择伙伴继续游戏</p>
+        <div class="rescue-options">
+          <button class="rescue-card" data-rescue="hammer" type="button">
+            <span class="hammer-icon large" aria-hidden="true">🔨</span>
+          </button>
+          <button class="rescue-card bird-card" data-rescue="bird" type="button">
+            <span class="bird-sprite bird-innocent" role="img" aria-label="无辜站立的牡丹鹦鹉"></span>
+          </button>
+        </div>
+      </div>
+    </dialog>
+    <div id="rescueStatus" class="rescue-status" hidden>点击棋盘，指定小鸟爆破中心</div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
