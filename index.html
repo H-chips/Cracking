@@ -22,14 +22,16 @@
 
     <section id="tray" class="tray" aria-label="待放置方块"></section>
     <p class="hint">拖动下方方块到棋盘；填满整行或整列即可消除</p>
-    <button id="restart" class="restart" type="button">重新开始</button>
-    <details class="rescue-menu">
-      <summary>神秘力量</summary>
-      <nav class="rescue-dock" aria-label="神秘力量救援伙伴">
-        <button data-rescue="hammer" type="button" aria-label="召唤巨型锤子"><span class="hammer-icon" aria-hidden="true">🔨</span></button>
-        <button data-rescue="bird" type="button" aria-label="召唤无辜小鸟"><span class="bird-sprite bird-innocent" aria-hidden="true"></span></button>
-      </nav>
-    </details>
+    <div class="action-row">
+      <button id="restart" class="restart" type="button">重新开始</button>
+      <details class="rescue-menu">
+        <summary>神秘力量</summary>
+        <nav class="rescue-dock" aria-label="神秘力量救援伙伴">
+          <button data-rescue="hammer" type="button" aria-label="召唤巨型锤子"><span class="hammer-icon" aria-hidden="true">🔨</span></button>
+          <button data-rescue="bird" type="button" aria-label="召唤无辜小鸟"><span class="bird-sprite bird-innocent" aria-hidden="true"></span></button>
+        </nav>
+      </details>
+    </div>
 
     <dialog id="gameOver">
       <div class="dialog-card">

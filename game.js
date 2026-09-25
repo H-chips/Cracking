@@ -79,6 +79,7 @@ function pointCell(clientX,clientY){
   return {x:Math.floor((clientX-r.left)/cellW),y:Math.floor((clientY-r.top)/cellH)};
 }
 function startDrag(e){
+  e.preventDefault();
   if(rescueMode)return;
   const el=e.currentTarget, index=+el.dataset.piece, {shape,color}=pieces[index]; el.setPointerCapture(e.pointerId); el.classList.add('dragging');
   const ghost=el.cloneNode(true); ghost.className='drag-ghost'; document.body.append(ghost);
@@ -87,6 +88,7 @@ function startDrag(e){
 }
 function moveDrag(e){
   if(!drag)return;
+  e.preventDefault();
   drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px';
   const p=pointCell(e.clientX,e.clientY);
   const w=Math.max(...drag.shape.map(v=>v[0]))+1,h=Math.max(...drag.shape.map(v=>v[1]))+1;
@@ -179,4 +181,5 @@ async function birdAttack(){
 function startRescue(kind){if(rescueMode)return;if(overEl.open)overEl.close();kind==='hammer'?hammerRescue():birdRescue();}
 document.querySelectorAll('[data-rescue]').forEach(b=>b.onclick=()=>startRescue(b.dataset.rescue));
 document.querySelector('#restart').onclick=newGame;
+document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 newGame();
