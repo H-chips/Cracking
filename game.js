@@ -13,20 +13,28 @@ const fillEl = document.querySelector('#progressFill');
 const overEl = document.querySelector('#gameOver');
 const rescueStatus=document.querySelector('#rescueStatus');
 let board, score, pieces, drag, combo=0, rescueMode=false;
-let audioCtx;
+let audioCtx,audioUnlocked=false;
 const realBirdCall=new Audio('assets/bourkes-parrot-call.ogv');
 realBirdCall.id='realBirdCall'; realBirdCall.preload='auto'; realBirdCall.volume=.72; realBirdCall.hidden=true; document.body.append(realBirdCall);
 
 function audio(){
   if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==='suspended') audioCtx.resume();
   return audioCtx;
 }
+function unlockAudio(){
+  const a=audio();
+  if(audioUnlocked&&a.state==='running')return;
+  if(a.state==='suspended')a.resume().catch(()=>{});
+  // iOS / 微信内核需要在首次用户手势内真正启动一个音频节点，静音节点不会被听见。
+  const buffer=a.createBuffer(1,1,a.sampleRate),source=a.createBufferSource(),gain=a.createGain();
+  gain.gain.value=0;source.buffer=buffer;source.connect(gain).connect(a.destination);source.start(0);
+  if(!audioUnlocked)realBirdCall.load();audioUnlocked=true;
+}
 function tone(from,to,duration=.12,volume=.04,type='sine',delay=0){
-  const a=audio(),t=a.currentTime+delay,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(from,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,to),t+duration);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(volume,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g).connect(a.destination);o.start(t);o.stop(t+duration+.02);
+  const a=audio();if(a.state==='suspended'){a.resume().then(()=>tone(from,to,duration,volume,type,delay)).catch(()=>{});return}const t=a.currentTime+delay,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(from,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,to),t+duration);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(volume,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g).connect(a.destination);o.start(t);o.stop(t+duration+.02);
 }
 function noise(duration=.12,volume=.035,delay=0,lowpass=1200){
-  const a=audio(),t=a.currentTime+delay,len=Math.ceil(a.sampleRate*duration),buffer=a.createBuffer(1,len,a.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*(1-i/len);const src=a.createBufferSource(),filter=a.createBiquadFilter(),g=a.createGain();src.buffer=buffer;filter.type='lowpass';filter.frequency.value=lowpass;g.gain.setValueAtTime(volume,t);g.gain.exponentialRampToValueAtTime(.0001,t+duration);src.connect(filter).connect(g).connect(a.destination);src.start(t);
+  const a=audio();if(a.state==='suspended'){a.resume().then(()=>noise(duration,volume,delay,lowpass)).catch(()=>{});return}const t=a.currentTime+delay,len=Math.ceil(a.sampleRate*duration),buffer=a.createBuffer(1,len,a.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*(1-i/len);const src=a.createBufferSource(),filter=a.createBiquadFilter(),g=a.createGain();src.buffer=buffer;filter.type='lowpass';filter.frequency.value=lowpass;g.gain.setValueAtTime(volume,t);g.gain.exponentialRampToValueAtTime(.0001,t+duration);src.connect(filter).connect(g).connect(a.destination);src.start(t);
 }
 function birdCall(){realBirdCall.pause();realBirdCall.currentTime=0;realBirdCall.play().catch(()=>{})}
 function wingSfx(){noise(.16,.018,0,1800);tone(650,420,.12,.012,'triangle')}
@@ -181,5 +189,7 @@ async function birdAttack(){
 function startRescue(kind){if(rescueMode)return;if(overEl.open)overEl.close();kind==='hammer'?hammerRescue():birdRescue();}
 document.querySelectorAll('[data-rescue]').forEach(b=>b.onclick=()=>startRescue(b.dataset.rescue));
 document.querySelector('#restart').onclick=newGame;
+document.addEventListener('pointerdown',unlockAudio,{capture:true});
+document.addEventListener('touchstart',unlockAudio,{capture:true,passive:true});
 document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
 newGame();
