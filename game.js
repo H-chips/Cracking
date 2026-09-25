@@ -12,7 +12,7 @@ const bestEl = document.querySelector('#best');
 const fillEl = document.querySelector('#progressFill');
 const overEl = document.querySelector('#gameOver');
 const rescueStatus=document.querySelector('#rescueStatus');
-let board, score, pieces, drag, rescueMode=false;
+let board, score, pieces, drag, combo=0, rescueMode=false;
 let audioCtx;
 const realBirdCall=new Audio('assets/bourkes-parrot-call.ogv');
 realBirdCall.id='realBirdCall'; realBirdCall.preload='auto'; realBirdCall.volume=.72; realBirdCall.hidden=true; document.body.append(realBirdCall);
@@ -34,7 +34,13 @@ function peckSfx(delay=0){tone(1750,620,.055,.045,'square',delay);noise(.045,.01
 function hammerWhoosh(){noise(.28,.045,0,650);tone(170,75,.3,.06,'sawtooth')}
 function hammerHitSfx(){tone(95,42,.16,.075,'sine');noise(.13,.055,0,480)}
 function placeSfx(){tone(520,360,.07,.025,'triangle')}
-function clearSfx(){tone(520,980,.16,.035,'sine');tone(720,1320,.2,.03,'sine',.08)}
+function moveSfx(valid=true){tone(valid?330:190,valid?405:155,.035,.009,'triangle')}
+function clearSfx(lines=1,streak=1){
+  const lift=Math.min(420,(lines-1)*90+(streak-1)*55),notes=[520,660,820,1040];
+  notes.slice(0,Math.min(notes.length,lines+1)).forEach((note,i)=>tone(note+lift,(note+lift)*1.18,.13,.025,'sine',i*.065));
+  noise(.12,.018,.025,1900);
+  if(lines>=2||streak>=2){tone(740+lift,1480+lift,.28,.032,'triangle',.14);tone(980+lift,1760+lift,.3,.022,'sine',.22)}
+}
 
 for(let i=0;i<SIZE*SIZE;i++){ const c=document.createElement('div'); c.className='cell'; c.dataset.i=i; boardEl.append(c); }
 const cells=[...boardEl.children];
@@ -47,7 +53,7 @@ function initialBoard(){
 }
 function newGame(){
   board=initialBoard(); score=0; pieces=[{shape:[[0,0],[1,0],[0,1],[1,1]],color:'#f5c958'}];
-  rescueMode=false; rescueStatus.hidden=true; overEl.open&&overEl.close(); render();
+  combo=0; rescueMode=false; rescueStatus.hidden=true; overEl.open&&overEl.close(); render();
 }
 function render(){
   cells.forEach((c,i)=>{c.className='cell'+(board[i]?' filled':'');c.style.setProperty('--block-color',board[i]||'')});
@@ -76,7 +82,7 @@ function startDrag(e){
   if(rescueMode)return;
   const el=e.currentTarget, index=+el.dataset.piece, {shape,color}=pieces[index]; el.setPointerCapture(e.pointerId); el.classList.add('dragging');
   const ghost=el.cloneNode(true); ghost.className='drag-ghost'; document.body.append(ghost);
-  drag={el,index,shape,color,ghost,x:-9,y:-9}; moveDrag(e);
+  drag={el,index,shape,color,ghost,x:-9,y:-9,lastCell:''}; moveDrag(e);
   el.onpointermove=moveDrag; el.onpointerup=endDrag; el.onpointercancel=endDrag;
 }
 function moveDrag(e){
@@ -86,7 +92,9 @@ function moveDrag(e){
   const w=Math.max(...drag.shape.map(v=>v[0]))+1,h=Math.max(...drag.shape.map(v=>v[1]))+1;
   // 指针锚定在形状底边中央：视觉方块与实际落点始终使用同一格坐标。
   drag.x=p.x-Math.floor(w/2); drag.y=p.y-h+1;
-  preview(drag.shape,drag.x,drag.y,canPlace(drag.shape,drag.x,drag.y),drag.color);
+  const valid=canPlace(drag.shape,drag.x,drag.y),cellId=drag.x+','+drag.y;
+  if(drag.lastCell&&cellId!==drag.lastCell&&p.x>=0&&p.x<SIZE&&p.y>=0&&p.y<SIZE)moveSfx(valid);
+  drag.lastCell=cellId; preview(drag.shape,drag.x,drag.y,valid,drag.color);
 }
 async function endDrag(){
   if(!drag)return; const {shape,color,x,y,index,el,ghost}=drag; clearPreview(); el.classList.remove('dragging'); ghost.remove();
@@ -100,12 +108,25 @@ async function clearLines(){
   const rows=[],cols=[]; for(let y=0;y<SIZE;y++)if(Array.from({length:SIZE},(_,x)=>board[key(x,y)]).every(Boolean))rows.push(y);
   for(let x=0;x<SIZE;x++)if(Array.from({length:SIZE},(_,y)=>board[key(x,y)]).every(Boolean))cols.push(x);
   const doomed=new Set(); rows.forEach(y=>{for(let x=0;x<SIZE;x++)doomed.add(key(x,y))});cols.forEach(x=>{for(let y=0;y<SIZE;y++)doomed.add(key(x,y))});
-  if(doomed.size){clearSfx();doomed.forEach(i=>cells[i].classList.add('clearing'));burst([...doomed]);popScore((rows.length+cols.length)*10*SIZE);await new Promise(r=>setTimeout(r,430));}
+  const lineCount=rows.length+cols.length;
+  if(lineCount){combo++;clearSfx(lineCount,combo);doomed.forEach(i=>cells[i].classList.add('clearing'));burst([...doomed],lineCount>=2?4:2);popScore(lineCount*10*SIZE);showPraise(lineCount,combo);await new Promise(r=>setTimeout(r,lineCount>=2?560:430));}
+  else combo=0;
   rows.forEach(y=>{for(let x=0;x<SIZE;x++)board[key(x,y)]=0}); cols.forEach(x=>{for(let y=0;y<SIZE;y++)board[key(x,y)]=0});
-  if(rows.length+cols.length) score+=(rows.length+cols.length)*10*SIZE;
+  if(lineCount) score+=lineCount*10*SIZE;
 }
 function burst(indices,count=2){const br=boardEl.getBoundingClientRect(),s=br.width/SIZE;indices.forEach(i=>{const x=i%SIZE,y=Math.floor(i/SIZE);for(let n=0;n<count;n++){const p=document.createElement('i');p.className='particle';p.style.left=br.left+(x+.5)*s+'px';p.style.top=br.top+(y+.5)*s+'px';p.style.setProperty('--particle',board[i]||'#ff9b3f');p.style.setProperty('--dx',(Math.random()*130-65)+'px');p.style.setProperty('--dy',(Math.random()*125-88)+'px');document.body.append(p);setTimeout(()=>p.remove(),650)}})}
 function popScore(amount){const p=document.createElement('b');p.className='score-pop';p.textContent='+'+amount;document.querySelector('.game-shell').append(p);setTimeout(()=>p.remove(),800)}
+function showPraise(lines,streak){
+  if(lines<2&&streak<2)return;
+  const shell=document.querySelector('.game-shell'),p=document.createElement('div');
+  let title=lines>=4?'不可思议！':lines===3?'超强三连消！':'漂亮双消！';
+  if(streak>=4)title='势不可挡！';else if(streak===3)title='超神连击！';else if(streak===2)title='继续连击！';
+  p.className='praise praise-'+Math.min(4,Math.max(lines,streak));
+  p.innerHTML='<strong>'+title+'</strong><span>'+(streak>=2?'COMBO × '+streak:lines+' 行同时消除')+'</span>';
+  shell.append(p);document.querySelector('.board-frame').classList.add('clear-celebrate');
+  for(let i=0;i<14+Math.max(lines,streak)*4;i++){const s=document.createElement('i');s.className='celebration-spark';s.style.setProperty('--a',(Math.PI*2*i/(14+Math.max(lines,streak)*4))+'rad');s.style.setProperty('--d',(75+Math.random()*105)+'px');s.style.setProperty('--h',Math.floor(Math.random()*360));p.append(s)}
+  setTimeout(()=>document.querySelector('.board-frame').classList.remove('clear-celebrate'),520);setTimeout(()=>p.remove(),1250);
+}
 function hasMove(){return pieces.filter(Boolean).some(p=>{for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++)if(canPlace(p.shape,x,y))return true;return false});}
 function gameOver(){localStorage.blockBest=Math.max(score,+(localStorage.blockBest||0));document.querySelector('#finalScore').textContent=score;setTimeout(()=>{if(!overEl.open)overEl.showModal()},250);}
 async function hammerRescue(){
