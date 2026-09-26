@@ -89,7 +89,7 @@ dialog::backdrop { background: #1c100bc4; backdrop-filter: blur(2px); }
 .bird-card .bird-sprite { width:112px; height:92px; filter:drop-shadow(0 4px 3px #73421b66); }
 .bird-sprite { display:inline-block; background-image:url('assets/bird-action-sprite.png'); background-repeat:no-repeat; background-size:400% 100%; background-position:0 0; }
 .bird-idle { animation:birdIdleFrames 1.1s steps(1,end) infinite; }
-.bird-innocent { background-image:url('assets/bird-innocent.png'); background-size:contain; background-position:center; }
+.bird-innocent { background-image:url('assets/bird-video-icon.png'); background-size:contain; background-position:center; }
 .bird-alert { background-position:33.333% 0; }
 .bird-angry { background-position:66.666% 0; animation:angryIcon .22s ease-in-out infinite alternate; }
 .bird-dive { background-position:100% 0; }

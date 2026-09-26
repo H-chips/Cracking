@@ -14,7 +14,7 @@ const overEl = document.querySelector('#gameOver');
 const rescueStatus=document.querySelector('#rescueStatus');
 let board, score, pieces, drag, combo=0, rescueMode=false;
 let audioCtx,audioUnlocked=false;
-const realBirdCall=new Audio('assets/bourkes-parrot-call.ogv');
+const realBirdCall=new Audio('assets/video-lovebird-call.mp3');
 realBirdCall.id='realBirdCall'; realBirdCall.preload='auto'; realBirdCall.volume=.72; realBirdCall.hidden=true; document.body.append(realBirdCall);
 
 function audio(){
