@@ -12,7 +12,7 @@ const bestEl = document.querySelector('#best');
 const fillEl = document.querySelector('#progressFill');
 const overEl = document.querySelector('#gameOver');
 const rescueStatus=document.querySelector('#rescueStatus');
-let board, score, pieces, drag, combo=0, rescueMode=false;
+let board, score, pieces, drag, combo=0, rescueMode=false, blessingActive=false;
 let audioCtx,audioUnlocked=false;
 const realBirdCall=new Audio('assets/video-lovebird-call.mp3');
 realBirdCall.id='realBirdCall'; realBirdCall.preload='auto'; realBirdCall.volume=.72; realBirdCall.hidden=true; document.body.append(realBirdCall);
@@ -63,6 +63,17 @@ function newGame(){
   board=initialBoard(); score=0; pieces=[{shape:[[0,0],[1,0],[0,1],[1,1]],color:'#f5c958'}];
   combo=0; rescueMode=false; rescueStatus.hidden=true; overEl.open&&overEl.close(); render();
 }
+function blessingPiece(){
+  const empty=[];for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++)if(!board[key(x,y)])empty.push([x,y]);
+  if(!empty.length)return {shape:[[0,0]],color:'#b996ff',blessed:true,target:{x:0,y:0}};
+  const minX=Math.min(...empty.map(p=>p[0])),minY=Math.min(...empty.map(p=>p[1]));
+  return {shape:empty.map(([x,y])=>[x-minX,y-minY]),color:'#b996ff',blessed:true,target:{x:minX,y:minY}};
+}
+function freshPieces(){
+  const next=Array.from({length:3},()=>({shape:SHAPES[Math.floor(Math.random()*SHAPES.length)],color:COLORS[Math.floor(Math.random()*COLORS.length)]}));
+  if(blessingActive)next[Math.floor(Math.random()*next.length)]=blessingPiece();
+  return next;
+}
 function render(){
   cells.forEach((c,i)=>{c.className='cell'+(board[i]?' filled':'');c.style.setProperty('--block-color',board[i]||'')});
   scoreEl.textContent=score; const best=Math.max(score,+(localStorage.blockBest||0)); bestEl.textContent=best;
@@ -72,7 +83,7 @@ function renderTray(){
   trayEl.innerHTML=''; pieces.forEach((piece,index)=>{
     if(!piece){ trayEl.append(document.createElement('div')); return; } const {shape,color}=piece;
     const maxX=Math.max(...shape.map(p=>p[0])), maxY=Math.max(...shape.map(p=>p[1]));
-    const p=document.createElement('div'); p.className='piece'; p.style.setProperty('--cols',maxX+1); p.style.setProperty('--rows',maxY+1); p.style.setProperty('--piece-color',color); p.dataset.piece=index;
+    const p=document.createElement('div'); p.className='piece'+(piece.blessed?' blessed-piece':''); p.style.setProperty('--cols',maxX+1); p.style.setProperty('--rows',maxY+1); p.style.setProperty('--piece-color',color); p.dataset.piece=index;
     shape.forEach(([x,y])=>{const b=document.createElement('i'); b.className='block'; b.style.gridColumn=x+1; b.style.gridRow=y+1; p.append(b)});
     p.addEventListener('pointerdown',startDrag); trayEl.append(p);
   });
@@ -86,12 +97,23 @@ function pointCell(clientX,clientY){
   const cellW=r.width/SIZE,cellH=r.height/SIZE;
   return {x:Math.floor((clientX-r.left)/cellW),y:Math.floor((clientY-r.top)/cellH)};
 }
+function nearestPlacement(shape,x,y,piece){
+  if(piece.blessed&&piece.target&&canPlace(shape,piece.target.x,piece.target.y)){
+    const d=Math.hypot(x-piece.target.x,y-piece.target.y);if(d<=2.8)return {...piece.target,snapped:d>.1};
+  }
+  let best=canPlace(shape,x,y)?{x,y,d:0}:null;
+  for(let oy=-2;oy<=2;oy++)for(let ox=-2;ox<=2;ox++){
+    const d=Math.hypot(ox,oy);if(d>1.65||!canPlace(shape,x+ox,y+oy))continue;
+    if(!best||d<best.d)best={x:x+ox,y:y+oy,d};
+  }
+  return best?{x:best.x,y:best.y,snapped:best.d>.1}:null;
+}
 function startDrag(e){
   e.preventDefault();
   if(rescueMode)return;
-  const el=e.currentTarget, index=+el.dataset.piece, {shape,color}=pieces[index]; el.setPointerCapture(e.pointerId); el.classList.add('dragging');
+  const el=e.currentTarget, index=+el.dataset.piece, piece=pieces[index], {shape,color}=piece; el.setPointerCapture(e.pointerId); el.classList.add('dragging');boardEl.classList.add('drag-active');
   const ghost=el.cloneNode(true); ghost.className='drag-ghost'; document.body.append(ghost);
-  drag={el,index,shape,color,ghost,x:-9,y:-9,lastCell:''}; moveDrag(e);
+  drag={el,index,piece,shape,color,ghost,x:-9,y:-9,lastCell:'',valid:false}; moveDrag(e);
   el.onpointermove=moveDrag; el.onpointerup=endDrag; el.onpointercancel=endDrag;
 }
 function moveDrag(e){
@@ -101,16 +123,19 @@ function moveDrag(e){
   const p=pointCell(e.clientX,e.clientY);
   const w=Math.max(...drag.shape.map(v=>v[0]))+1,h=Math.max(...drag.shape.map(v=>v[1]))+1;
   // 指针锚定在形状底边中央：视觉方块与实际落点始终使用同一格坐标。
-  drag.x=p.x-Math.floor(w/2); drag.y=p.y-h+1;
-  const valid=canPlace(drag.shape,drag.x,drag.y),cellId=drag.x+','+drag.y;
+  const rawX=p.x-Math.floor(w/2),rawY=p.y-h+1,snap=nearestPlacement(drag.shape,rawX,rawY,drag.piece);
+  drag.x=snap?snap.x:rawX;drag.y=snap?snap.y:rawY;drag.valid=!!snap;
+  const valid=drag.valid,cellId=drag.x+','+drag.y;
   if(drag.lastCell&&cellId!==drag.lastCell&&p.x>=0&&p.x<SIZE&&p.y>=0&&p.y<SIZE)moveSfx(valid);
+  if(snap?.snapped&&cellId!==drag.lastCell){drag.ghost.classList.remove('snap-pulse');void drag.ghost.offsetWidth;drag.ghost.classList.add('snap-pulse');if(navigator.vibrate)navigator.vibrate(8)}
+  drag.ghost.classList.toggle('valid-drop',valid);drag.ghost.classList.toggle('invalid-drop',!valid);
   drag.lastCell=cellId; preview(drag.shape,drag.x,drag.y,valid,drag.color);
 }
 async function endDrag(){
-  if(!drag)return; const {shape,color,x,y,index,el,ghost}=drag; clearPreview(); el.classList.remove('dragging'); ghost.remove();
-  if(canPlace(shape,x,y)){
+  if(!drag)return; const {shape,color,x,y,index,el,ghost,valid}=drag; clearPreview(); el.classList.remove('dragging');boardEl.classList.remove('drag-active'); ghost.remove();
+  if(valid&&canPlace(shape,x,y)){
     shape.forEach(([dx,dy])=>board[key(x+dx,y+dy)]=color); pieces[index]=null; score+=shape.length; placeSfx(); render(); await clearLines();
-    if(pieces.every(p=>!p)) pieces=Array.from({length:3},()=>({shape:SHAPES[Math.floor(Math.random()*SHAPES.length)],color:COLORS[Math.floor(Math.random()*COLORS.length)]}));
+    if(pieces.every(p=>!p)) pieces=freshPieces();
   }
   drag=null; render(); if(!hasMove()) gameOver();
 }
@@ -186,7 +211,13 @@ async function birdAttack(){
   }
   bird.remove();rescueMode=false;render();if(!hasMove())gameOver();
 }
-function startRescue(kind){if(rescueMode)return;if(overEl.open)overEl.close();kind==='hammer'?hammerRescue():birdRescue();}
+function blessingRescue(){
+  blessingActive=!blessingActive;document.querySelectorAll('[data-rescue="blessing"]').forEach(b=>{b.classList.toggle('active',blessingActive);b.setAttribute('aria-pressed',String(blessingActive))});
+  document.querySelector('.rescue-menu').open=false;overEl.open&&overEl.close();
+  const shell=document.querySelector('.game-shell'),p=document.createElement('div');p.className='blessing-toast';p.innerHTML='<b>hkx</b><span>'+(blessingActive?'赐福已开启':'赐福已收起')+'</span>';shell.append(p);tone(520,1040,.32,.035,'sine');setTimeout(()=>p.remove(),1200);
+  if(blessingActive&&pieces.every(Boolean))pieces[Math.floor(Math.random()*pieces.length)]=blessingPiece();render();
+}
+function startRescue(kind){if(rescueMode)return;if(kind==='blessing'){blessingRescue();return}if(overEl.open)overEl.close();kind==='hammer'?hammerRescue():birdRescue();}
 document.querySelectorAll('[data-rescue]').forEach(b=>b.onclick=()=>startRescue(b.dataset.rescue));
 document.querySelector('#restart').onclick=newGame;
 document.addEventListener('pointerdown',unlockAudio,{capture:true});

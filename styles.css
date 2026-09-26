@@ -63,10 +63,11 @@ button { font: inherit; }
 .rescue-menu summary::-webkit-details-marker { display:none; }
 .rescue-menu summary::after { content:'⌃'; margin-left:7px; font-size:12px; transition:transform .2s; }
 .rescue-menu[open] summary::after { transform:rotate(180deg); }
-.rescue-dock { position:absolute; left:50%; bottom:48px; translate:-50% 0; padding:7px; width:170px; display:grid; grid-template-columns:1fr 1fr; gap:8px; border:2px solid #d79b50; border-radius:18px; background:#432515f2; box-shadow:inset 0 2px 7px #24120b,0 9px 25px #1b0c08aa; animation:menuRise .2s ease-out; }
+.rescue-dock { position:absolute; left:50%; bottom:48px; translate:-50% 0; padding:7px; width:246px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; border:2px solid #d79b50; border-radius:18px; background:#432515f2; box-shadow:inset 0 2px 7px #24120b,0 9px 25px #1b0c08aa; animation:menuRise .2s ease-out; }
 @keyframes menuRise { from{opacity:0;transform:translateY(12px) scale(.92)} to{opacity:1;transform:none} }
 .rescue-dock button { height:58px; padding:2px; display:flex; align-items:center; justify-content:center; border:2px solid #d19145; border-radius:13px; color:#fff4c9; background:linear-gradient(#9d612e,#70401e); cursor:pointer; box-shadow:0 3px #3e210f; transition:transform .15s,filter .15s; }
 .rescue-dock button:hover { transform:translateY(-2px);filter:brightness(1.14) }.rescue-dock button:active{transform:translateY(2px)}
+.rescue-dock button.active{border-color:#f2dc7a;background:linear-gradient(#825ccc,#553396);box-shadow:0 0 15px #d6b8ff,0 3px #2d1750}
 .rescue-dock .bird-sprite{width:54px;height:50px;flex:none}
 .hammer-icon { display:inline-block; font-size:46px; line-height:1; transform:rotate(-18deg); filter:drop-shadow(0 4px 2px #2a140b99); }
 .hammer-icon.large { font-size:92px; margin:8px; animation:hammerIconFloat .7s ease-in-out infinite alternate; }
@@ -82,11 +83,13 @@ dialog { border: 0; padding: 0; border-radius: 22px; background: transparent; co
 dialog::backdrop { background: #1c100bc4; backdrop-filter: blur(2px); }
 .dialog-card { width: min(370px,90vw); padding: 24px; text-align: center; background: linear-gradient(#fff5cf,#f2c56e); border: 5px solid #985626; border-radius: 22px; box-shadow: 0 10px 32px #1d0f09; }
 .dialog-card h2 { margin: 5px; font-size: 30px; }.dialog-card p { font-size: 20px; }.trophy { font-size: 48px; }
-.rescue-options { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0; }
+.rescue-options { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:16px 0; }
 .dialog-card .rescue-card { min-height:130px; padding:10px 6px; border:3px solid #bb712d; border-radius:17px; background:linear-gradient(#fff8dc,#ffd47c); color:#633719; box-shadow:0 5px #8a511f; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:transform .15s,filter .15s; }
 .dialog-card .rescue-card:hover { transform:translateY(-4px) scale(1.03); filter:brightness(1.05); }
 .rescue-card b { font-size:18px; }.rescue-card small { margin-top:4px; opacity:.7; }
 .bird-card .bird-sprite { width:112px; height:92px; filter:drop-shadow(0 4px 3px #73421b66); }
+.blessing-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:50%;color:#fff7bf;background:radial-gradient(circle,#e9dbff 0 13%,#9b68e1 15% 45%,#55308e 48% 65%,transparent 68%);filter:drop-shadow(0 0 7px #caa6ff);animation:blessingSpin 3.6s linear infinite}.blessing-icon b{font:900 12px/1 sans-serif;text-shadow:0 2px #4a266f}.blessing-icon.large{width:94px;height:94px}.blessing-icon.large b{font-size:21px}.blessing-card.active{outline:4px solid #cdaaff}
+@keyframes blessingSpin{50%{filter:drop-shadow(0 0 13px #fff0a5);transform:rotate(4deg) scale(1.05)}}
 .bird-sprite { display:inline-block; background-image:url('assets/bird-action-sprite.png'); background-repeat:no-repeat; background-size:400% 100%; background-position:0 0; }
 .bird-idle { animation:birdIdleFrames 1.1s steps(1,end) infinite; }
 .bird-innocent { background-image:url('assets/bird-video-icon.png'); background-size:contain; background-position:center; }
@@ -122,6 +125,9 @@ dialog::backdrop { background: #1c100bc4; backdrop-filter: blur(2px); }
 @keyframes boardShake { 25%{transform:translate(-4px,2px)} 50%{transform:translate(4px,-2px)} 75%{transform:translate(-2px,-3px)} }
 .bird-scout { position:absolute; z-index:115; width:140px; height:126px; pointer-events:none; filter:drop-shadow(0 8px 5px #20100888); transition:left .2s cubic-bezier(.2,.8,.3,1),top .2s cubic-bezier(.2,.8,.3,1),transform .2s; }
 .bird-scout.enraged { filter:drop-shadow(0 0 8px #ffef60) drop-shadow(0 0 18px #ff382e); animation:birdRage .11s linear infinite alternate; }
+.blessed-piece{--cell:clamp(10px,2.8vw,18px);filter:drop-shadow(0 0 8px #d8b7ff)}.blessed-piece .block{box-shadow:inset 1px 1px #fff,0 0 6px #d8b7ff;animation:blessedGlow .8s ease-in-out infinite alternate}
+.board.drag-active{box-shadow:inset 0 0 18px #130905,0 0 0 3px #d5a96a55}.drag-ghost{will-change:left,top,transform,filter}.drag-ghost.valid-drop{filter:drop-shadow(0 12px 8px #24100677) drop-shadow(0 0 10px #76ffb0)}.drag-ghost.invalid-drop{filter:grayscale(.35) drop-shadow(0 8px 5px #5b1616aa);opacity:.72}.drag-ghost.snap-pulse{animation:snapPulse .16s ease-out}.cell.preview{transform:scale(.91);box-shadow:inset 0 0 0 3px #fff9,0 0 10px var(--preview-color);transition:transform .08s}.cell.bad{box-shadow:inset 0 0 0 2px #ff5e52aa}.blessing-toast{position:absolute;z-index:170;left:50%;top:44%;translate:-50% -50%;display:grid;place-items:center;padding:18px 30px;border:3px solid #ead8ff;border-radius:24px;background:#482476ee;box-shadow:0 0 30px #c39cff;color:#fff7c5;pointer-events:none;animation:blessingToast 1.2s ease-out forwards}.blessing-toast b{font-size:32px}.blessing-toast span{font-weight:900}
+@keyframes snapPulse{50%{transform:translate(-50%,-100%) scale(1.09)}}@keyframes blessedGlow{to{filter:brightness(1.22)}}@keyframes blessingToast{0%{opacity:0;transform:scale(.4) rotate(-8deg)}20%{opacity:1;transform:scale(1.08)}75%{opacity:1}100%{opacity:0;transform:scale(.9) translateY(-25px)}}
 @keyframes birdHover { to{translate:0 -7px;rotate:2deg} }
 @keyframes birdRage { to{translate:3px -4px;rotate:2deg} }
 .rage-mark { position:absolute; z-index:116; font-size:42px; color:#ff2d22; font-weight:1000; text-shadow:0 2px white; pointer-events:none; animation:ragePop .55s ease-out infinite alternate; }
