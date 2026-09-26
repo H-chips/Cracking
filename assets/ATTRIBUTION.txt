@@ -10,3 +10,6 @@ License: Creative Commons Attribution-ShareAlike 3.0 Unported
 License URL: https://creativecommons.org/licenses/by-sa/3.0/
 
 The recording is included locally as bourkes-parrot-call.ogv.
+
+Additional in-game lovebird call:
+Extracted and cleaned from the screen recording supplied by the project owner for this project.
