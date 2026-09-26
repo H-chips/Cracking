@@ -81,13 +81,14 @@ button { font: inherit; }
 .stickman-icon.large { width:78px;height:94px;color:#613619;transform:scale(1.25);margin:10px }.stickman-icon.large i{left:25px;width:30px;height:30px;font-size:9px;line-height:23px}.stickman-icon.large em{left:38px;top:34px;height:34px;width:5px}.stickman-icon.large b::before,.stickman-icon.large b::after,.stickman-icon.large u::before,.stickman-icon.large u::after{width:5px;height:35px}.stickman-icon.large b::before{left:38px;top:39px}.stickman-icon.large b::after{left:40px;top:39px}.stickman-icon.large u::before{left:38px;top:65px}.stickman-icon.large u::after{left:40px;top:65px}
 dialog { border: 0; padding: 0; border-radius: 22px; background: transparent; color: #5b351f; }
 dialog::backdrop { background: #1c100bc4; backdrop-filter: blur(2px); }
-.dialog-card { width: min(370px,90vw); padding: 24px; text-align: center; background: linear-gradient(#fff5cf,#f2c56e); border: 5px solid #985626; border-radius: 22px; box-shadow: 0 10px 32px #1d0f09; }
+.dialog-card { width: min(390px,94vw); padding:20px 14px; text-align: center; background: linear-gradient(#fff5cf,#f2c56e); border: 5px solid #985626; border-radius: 22px; box-shadow: 0 10px 32px #1d0f09; overflow:hidden; }
 .dialog-card h2 { margin: 5px; font-size: 30px; }.dialog-card p { font-size: 20px; }.trophy { font-size: 48px; }
-.rescue-options { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:16px 0; }
-.dialog-card .rescue-card { min-height:130px; padding:10px 6px; border:3px solid #bb712d; border-radius:17px; background:linear-gradient(#fff8dc,#ffd47c); color:#633719; box-shadow:0 5px #8a511f; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:transform .15s,filter .15s; }
+.rescue-options { width:100%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:16px 0; }
+.dialog-card .rescue-card { min-width:0; min-height:108px; padding:8px 3px; overflow:hidden; border:3px solid #bb712d; border-radius:17px; background:linear-gradient(#fff8dc,#ffd47c); color:#633719; box-shadow:0 5px #8a511f; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:transform .15s,filter .15s; }
 .dialog-card .rescue-card:hover { transform:translateY(-4px) scale(1.03); filter:brightness(1.05); }
 .rescue-card b { font-size:18px; }.rescue-card small { margin-top:4px; opacity:.7; }
-.bird-card .bird-sprite { width:112px; height:92px; filter:drop-shadow(0 4px 3px #73421b66); }
+.bird-card .bird-sprite { width:76px; height:72px; filter:drop-shadow(0 4px 3px #73421b66); }
+.dialog-card .hammer-icon.large{font-size:68px;margin:0}.dialog-card .blessing-icon.large{width:72px;height:72px}.dialog-card .blessing-icon.large b{font-size:17px}
 .blessing-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:50%;color:#fff7bf;background:radial-gradient(circle,#e9dbff 0 13%,#9b68e1 15% 45%,#55308e 48% 65%,transparent 68%);filter:drop-shadow(0 0 7px #caa6ff);animation:blessingSpin 3.6s linear infinite}.blessing-icon b{font:900 12px/1 sans-serif;text-shadow:0 2px #4a266f}.blessing-icon.large{width:94px;height:94px}.blessing-icon.large b{font-size:21px}.blessing-card.active{outline:4px solid #cdaaff}
 @keyframes blessingSpin{50%{filter:drop-shadow(0 0 13px #fff0a5);transform:rotate(4deg) scale(1.05)}}
 .bird-sprite { display:inline-block; background-image:url('assets/bird-action-sprite.png'); background-repeat:no-repeat; background-size:400% 100%; background-position:0 0; }

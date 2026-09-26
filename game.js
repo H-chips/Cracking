@@ -212,10 +212,16 @@ async function birdAttack(){
   bird.remove();rescueMode=false;render();if(!hasMove())gameOver();
 }
 function blessingRescue(){
-  blessingActive=!blessingActive;document.querySelectorAll('[data-rescue="blessing"]').forEach(b=>{b.classList.toggle('active',blessingActive);b.setAttribute('aria-pressed',String(blessingActive))});
+  const fromFailure=overEl.open;
+  blessingActive=fromFailure?true:!blessingActive;document.querySelectorAll('[data-rescue="blessing"]').forEach(b=>{b.classList.toggle('active',blessingActive);b.setAttribute('aria-pressed',String(blessingActive))});
   document.querySelector('.rescue-menu').open=false;overEl.open&&overEl.close();
   const shell=document.querySelector('.game-shell'),p=document.createElement('div');p.className='blessing-toast';p.innerHTML='<b>hkx</b><span>'+(blessingActive?'赐福已开启':'赐福已收起')+'</span>';shell.append(p);tone(520,1040,.32,.035,'sine');setTimeout(()=>p.remove(),1200);
-  if(blessingActive&&pieces.every(Boolean))pieces[Math.floor(Math.random()*pieces.length)]=blessingPiece();render();
+  if(blessingActive){
+    if(fromFailure)pieces=freshPieces();
+    else if(pieces.every(Boolean))pieces[Math.floor(Math.random()*pieces.length)]=blessingPiece();
+    else {const slot=pieces.findIndex(piece=>!piece);pieces[slot<0?0:slot]=blessingPiece()}
+  }
+  render();
 }
 function startRescue(kind){if(rescueMode)return;if(kind==='blessing'){blessingRescue();return}if(overEl.open)overEl.close();kind==='hammer'?hammerRescue():birdRescue();}
 document.querySelectorAll('[data-rescue]').forEach(b=>b.onclick=()=>startRescue(b.dataset.rescue));
